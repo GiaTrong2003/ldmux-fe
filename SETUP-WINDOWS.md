@@ -6,6 +6,18 @@ Repo này là **frontend** (Vite + React + TypeScript) của ldmux. Dashboard d�
 
 ---
 
+## ⚠️ Đọc trước — ổ gà Windows
+
+- **PowerShell khóa script.** Nếu `npm` báo `npm.ps1 cannot be loaded because running scripts is disabled`, mở PowerShell **as Administrator** chạy 1 lần:
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+- **Path nên không có dấu cách và tiếng Việt.** Dùng `D:\work\ldmux\` thay vì `D:\Tài liệu\...`.
+- **Repo này không tự chạy được** — phải có BE (repo `tmux-clone-for-enterprise-machine`) đặt sibling ở folder tên `be`. Xem mục 2.
+- **Nếu giao guide cho Claude Code chạy:** các bước thuần `npm install` / `npm run dev` Claude chạy được. Không có bước interactive nào ở repo này.
+
+---
+
 ## 1. Chuẩn bị
 
 | Thành phần | Cài thế nào |
