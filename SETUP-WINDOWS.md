@@ -14,7 +14,12 @@ Repo này là **frontend** (Vite + React + TypeScript) của ldmux. Dashboard d�
   ```
 - **Path nên không có dấu cách và tiếng Việt.** Dùng `D:\work\ldmux\` thay vì `D:\Tài liệu\...`.
 - **Repo này không tự chạy được** — phải có BE (repo `tmux-clone-for-enterprise-machine`) đặt sibling ở folder tên `be`. Xem mục 2.
-- **Nếu giao guide cho Claude Code chạy:** các bước thuần `npm install` / `npm run dev` Claude chạy được. Không có bước interactive nào ở repo này.
+- **Nếu giao guide cho Claude Code chạy:** các bước thuần `npm install` Claude tự chạy được. Riêng `npm run dev` là long-running — dặn Claude chạy **background** (`run_in_background: true`) rồi kiểm tra bằng curl/fetch, tránh Claude block conversation cho đến khi bạn Ctrl+C.
+- **Windows Defender làm `npm install` chậm 3–5 lần.** Máy cá nhân có thể thêm exclusion:
+  ```powershell
+  Add-MpPreference -ExclusionPath "D:\work\ldmux"
+  ```
+  (as Administrator). Máy enterprise thì bỏ qua.
 
 ---
 
