@@ -75,7 +75,13 @@ export function KickoffModal({ open, agents, onClose, onDone }: Props) {
           rows={6}
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          placeholder="Example: Our team needs to design a login page (backend API + frontend form). Plan and delegate."
+          onKeyDown={e => {
+            if (e.key !== 'Enter' || e.shiftKey || e.altKey) return;
+            if ((e.nativeEvent as any).isComposing) return;
+            e.preventDefault();
+            if (!busy && target && question.trim()) submit();
+          }}
+          placeholder="Example: design a login page... (Enter to send, Shift+Enter newline)"
         />
       </label>
     </Modal>

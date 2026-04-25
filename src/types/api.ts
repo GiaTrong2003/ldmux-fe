@@ -63,6 +63,8 @@ export interface ConversationEntry {
   durationMs: number;
   costUsd: number;
   isError?: boolean;
+  groupId?: string;
+  participants?: string[];
 }
 
 export interface CompanyResponse {
@@ -74,6 +76,55 @@ export interface CompanyResponse {
 export interface TailResponse {
   chunk: string;
   size: number;
+}
+
+export interface LiveProcInfo {
+  agentName: string;
+  pid?: number;
+  cmd: string;
+  argv: string[];
+  startedAt: string;
+  uptimeMs: number;
+  cwd: string;
+}
+
+export interface ToolCall {
+  id: string;
+  name: string;
+  input: any;
+  result?: string;
+  isError?: boolean;
+  startedAt?: string;
+  resultAt?: string;
+  durationMs?: number;
+}
+
+export interface TurnTrace {
+  turnIndex: number;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationMs: number | null;
+  userMsg: string;
+  assistantText: string;
+  thinking: string;
+  toolCalls: ToolCall[];
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationInputTokens: number;
+    cacheReadInputTokens: number;
+  };
+  model?: string;
+  isError?: boolean;
+}
+
+export interface AgentTrace {
+  agentName: string;
+  sessionId: string;
+  workDir: string | null;
+  tracePath: string | null;
+  exists: boolean;
+  turns: TurnTrace[];
 }
 
 export interface AskResult {

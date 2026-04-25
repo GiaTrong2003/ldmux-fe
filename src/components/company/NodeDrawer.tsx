@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { StatusBadge } from '../common/StatusDot';
 import { askAgent, resetAgent } from '../../api/agents';
 import { formatCost, formatDurationMs } from '../../utils/format';
+import { useEscape, submitOnEnter } from '../../hooks/useHotkeys';
 import type { AgentWithSession } from '../../types/api';
 import './NodeDrawer.css';
 
@@ -51,9 +52,15 @@ export function NodeDrawer({ open, name, agents, onClose, onChanged, onEdit }: P
 
   const handleReset = useCallback(async () => {
     if (!name) return;
-    if (!confirm(`Reset session for "${name}"?`)) return;
+    const running = agent?.status === 'running';
+    const warn = running
+      ? `"${name}" is running. Reset will kill its in-flight task and wipe history. Continue?`
+      : `Reset session for "${name}"?`;
+    if (!confirm(warn)) return;
     try { await resetAgent(name); onChanged(); } catch (e: any) { alert(e.message); }
-  }, [name, onChanged]);
+  }, [name, agent?.status, onChanged]);
+
+  useEscape(open, onClose);
 
   return (
     <div className={`node-drawer ${open ? 'open' : ''}`}>
@@ -78,14 +85,21 @@ export function NodeDrawer({ open, name, agents, onClose, onChanged, onEdit }: P
             {agent.skill && <Row label="Skill" value={agent.skill} />}
             <div className="node-drawer-btns">
               <button onClick={() => onEdit(agent.name)}>Edit agent</button>
-              <button onClick={handleReset} disabled={!agent.hasSession}>Reset session</button>
+              <button
+                onClick={handleReset}
+                disabled={!agent.hasSession && agent.status !== 'running'}
+                title={agent.status === 'running' ? 'Force-stop current task and reset' : 'Wipe session'}
+              >
+                {agent.status === 'running' ? 'Reset (stop task)' : 'Reset session'}
+              </button>
             </div>
           </div>
           <div className="node-drawer-ask">
             <textarea
-              placeholder="Ask this agent directly..."
+              placeholder="Ask this agent directly... (Enter to send, Shift+Enter newline)"
               value={question}
               onChange={e => setQuestion(e.target.value)}
+              onKeyDown={submitOnEnter(ask)}
               disabled={busy}
             />
             <div className="node-drawer-ask-row">

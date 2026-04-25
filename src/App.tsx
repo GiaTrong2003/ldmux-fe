@@ -5,13 +5,14 @@ import { ErrorsTab } from './components/workers/ErrorsTab';
 import { LiveTab } from './components/live/LiveTab';
 import { AgentsTab } from './components/agents/AgentsTab';
 import { CompanyTab } from './components/company/CompanyTab';
+import { DebugTab } from './components/debug/DebugTab';
 import { usePolling } from './hooks/usePolling';
 import { listWorkers, mergeAll, cleanAll } from './api/workers';
 import { listAgents } from './api/agents';
 import type { WorkerStatus, AgentWithSession } from './types/api';
 import './App.css';
 
-type TabKey = 'workers' | 'errors' | 'live' | 'agents' | 'company';
+type TabKey = 'workers' | 'errors' | 'live' | 'agents' | 'company' | 'debug';
 
 export default function App() {
   const [tab, setTab] = useState<TabKey>('workers');
@@ -31,6 +32,7 @@ export default function App() {
     { key: 'live', label: 'Live', badge: activeCount },
     { key: 'agents', label: 'Agents', badge: as.length },
     { key: 'company', label: 'Company', badge: as.filter(a => a.role).length },
+    { key: 'debug', label: 'Debug' },
   ];
 
   const handleMerge = useCallback(async () => {
@@ -90,6 +92,7 @@ export default function App() {
         {tab === 'company' && (
           <CompanyTab paused={paused} onAgentsChanged={agents.refresh} />
         )}
+        {tab === 'debug' && <DebugTab paused={paused} />}
       </main>
     </div>
   );

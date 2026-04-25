@@ -27,8 +27,19 @@ export const resetAgent = (name: string) =>
 export const deleteAgent = (name: string) =>
   apiDelete<{ success: boolean }>(`/api/agents/${encodeURIComponent(name)}`);
 
-export const askAgent = (name: string, question: string) =>
-  apiPost<AskResult>(`/api/agents/${encodeURIComponent(name)}/ask`, { question });
+export interface AskOpts {
+  from?: string;
+  groupId?: string;
+  participants?: string[];
+}
+export const askAgent = (name: string, question: string, optsOrFrom?: string | AskOpts) => {
+  const opts: AskOpts = typeof optsOrFrom === 'string' ? { from: optsOrFrom } : (optsOrFrom ?? {});
+  const body: Record<string, unknown> = { question };
+  if (opts.from) body.from = opts.from;
+  if (opts.groupId) body.groupId = opts.groupId;
+  if (opts.participants && opts.participants.length > 0) body.participants = opts.participants;
+  return apiPost<AskResult>(`/api/agents/${encodeURIComponent(name)}/ask`, body);
+};
 
 export interface CreateAgentBody {
   name: string;

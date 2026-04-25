@@ -8,7 +8,10 @@ import { KickoffModal } from './KickoffModal';
 import { InitCompanyModal } from './InitCompanyModal';
 import { AddAgentModal } from './AddAgentModal';
 import { EditAgentModal } from '../agents/EditAgentModal';
+import { AssignTaskModal } from './AssignTaskModal';
+import { AgentContextMenu, type ContextMenuState } from './AgentContextMenu';
 import { getCompany, setAutonomyOverride } from '../../api/company';
+import { deleteAgent } from '../../api/agents';
 import { usePolling } from '../../hooks/usePolling';
 import type { Autonomy } from '../../types/api';
 
@@ -28,17 +31,17 @@ export function CompanyTab({ paused, onAgentsChanged }: Props) {
   const [showKickoff, setShowKickoff] = useState(false);
   const [showInit, setShowInit] = useState(false);
   const [addingUnder, setAddingUnder] = useState<string | null | undefined>(undefined);
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
+  const [assign, setAssign] = useState<{ from: string; to: string[] } | null>(null);
 
-  // Active edges currently "delegating" work. Key = "parent-child", value = expiresAt ms.
+  // Glow edges that just delegated a task (parent-child key).
   const [activeExpiries, setActiveExpiries] = useState<Record<string, number>>({});
   const seenConvTsRef = useRef<Set<string>>(new Set());
   const bootstrappedRef = useRef(false);
 
-  // Detect new delegations whenever conversations update.
   useEffect(() => {
     const convs = company.conversations;
     if (!bootstrappedRef.current) {
-      // On first load, treat all existing conversations as "already seen" — don't glow history.
       convs.forEach(c => seenConvTsRef.current.add(`${c.timestamp}|${c.from}|${c.to}`));
       bootstrappedRef.current = true;
       return;
@@ -57,7 +60,6 @@ export function CompanyTab({ paused, onAgentsChanged }: Props) {
     }
   }, [company.conversations]);
 
-  // Prune expired glows.
   useEffect(() => {
     if (Object.keys(activeExpiries).length === 0) return;
     const id = window.setInterval(() => {
@@ -91,6 +93,24 @@ export function CompanyTab({ paused, onAgentsChanged }: Props) {
     onAgentsChanged();
   }, [refresh, onAgentsChanged]);
 
+  const handleDelete = useCallback(async (name: string) => {
+    if (!confirm(`Delete agent "${name}"? This removes its config, session, and history.`)) return;
+    try {
+      await deleteAgent(name);
+      onChanged();
+    } catch (err: any) {
+      alert('Delete failed: ' + err.message);
+    }
+  }, [onChanged]);
+
+  const openContextMenu = useCallback((name: string, x: number, y: number) => {
+    setCtxMenu({ name, x, y });
+  }, []);
+
+  const handleEdgeAssign = useCallback((parent: string, child: string) => {
+    setAssign({ from: parent, to: [child] });
+  }, []);
+
   const hasAgents = company.agents.length > 0;
 
   return (
@@ -116,9 +136,14 @@ export function CompanyTab({ paused, onAgentsChanged }: Props) {
             activeEdges={activeEdgeSet}
             onOpenNode={setDrawerName}
             onAddAgent={(parent) => setAddingUnder(parent)}
-            onGraphChanged={onChanged}
+            onContextMenu={openContextMenu}
+            onEdgeAssign={handleEdgeAssign}
           />
-          <ConversationFeed conversations={company.conversations} />
+          <ConversationFeed
+            conversations={company.conversations}
+            agents={company.agents}
+            onSent={onChanged}
+          />
         </>
       )}
 
@@ -157,6 +182,26 @@ export function CompanyTab({ paused, onAgentsChanged }: Props) {
         name={editing}
         onClose={() => setEditing(null)}
         onSaved={onChanged}
+      />
+
+      <AssignTaskModal
+        open={assign !== null}
+        agents={company.agents}
+        defaultFrom={assign?.from ?? 'user'}
+        defaultTo={assign?.to ?? null}
+        onClose={() => setAssign(null)}
+        onDone={onChanged}
+      />
+
+      <AgentContextMenu
+        state={ctxMenu}
+        onClose={() => setCtxMenu(null)}
+        onAsk={(name) => setAssign({ from: 'user', to: [name] })}
+        onAssign={(name) => setAssign({ from: name, to: [] })}
+        onOpen={(name) => setDrawerName(name)}
+        onEdit={(name) => setEditing(name)}
+        onAddChild={(parent) => setAddingUnder(parent)}
+        onDelete={handleDelete}
       />
     </>
   );

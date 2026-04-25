@@ -41,13 +41,11 @@
   color: var(--fg-dim);
 }
 
-.react-flow__handle {
-  width: 10px;
-  height: 10px;
-  background: var(--bg-0);
-  border: 1.5px solid var(--fg-dim);
-}
-.react-flow__handle:hover { border-color: var(--warn); }
+/* Edges: clickable, glow when delegating */
+.react-flow__edge { cursor: pointer; }
+.react-flow__edge-path { transition: stroke 0.2s; }
+.react-flow__edge:hover .react-flow__edge-path { stroke: #ffaa00 !important; stroke-width: 2.4 !important; }
+.react-flow__edge:hover .react-flow__edge-text { fill: #ffaa00; }
 
 @keyframes ldmux-edge-glow {
   0%   { filter: drop-shadow(0 0 0 rgba(255, 170, 0, 0)); }

@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { StatusBadge } from '../common/StatusDot';
 import { resetAgent, deleteAgent } from '../../api/agents';
 import { formatCost, formatDateTime } from '../../utils/format';
+import { TimelineModal } from '../debug/TimelineModal';
 import type { AgentWithSession } from '../../types/api';
 import './AgentCard.css';
 
@@ -14,11 +15,15 @@ interface Props {
 export function AgentCard({ agent, onEdit, onChanged }: Props) {
   const name = agent.name;
   const isRunning = agent.status === 'running';
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   const handleReset = useCallback(async () => {
-    if (!confirm(`Reset session for "${name}"? History is wiped; soul/skill kept.`)) return;
+    const warn = isRunning
+      ? `"${name}" is running. Reset will kill its in-flight task and wipe history. Continue?`
+      : `Reset session for "${name}"? History is wiped; soul/skill kept.`;
+    if (!confirm(warn)) return;
     try { await resetAgent(name); onChanged(); } catch (err: any) { alert(err.message); }
-  }, [name, onChanged]);
+  }, [name, isRunning, onChanged]);
 
   const handleDelete = useCallback(async () => {
     if (!confirm(`Delete agent "${name}" permanently? Removes soul, skill, session, history, logs.`)) return;
@@ -57,9 +62,23 @@ export function AgentCard({ agent, onEdit, onChanged }: Props) {
       </div>
       <div className="agent-card-footer">
         <button className="primary" onClick={onEdit} disabled={isRunning}>Edit</button>
-        <button onClick={handleReset} disabled={isRunning || !agent.hasSession}>Reset session</button>
+        <button
+          onClick={() => setTimelineOpen(true)}
+          disabled={!agent.hasSession}
+          title={agent.hasSession ? 'Replay turn-by-turn trace from Claude Code' : 'No session yet — ask the agent first'}
+        >
+          Timeline
+        </button>
+        <button
+          onClick={handleReset}
+          disabled={!agent.hasSession && !isRunning}
+          title={isRunning ? 'Force-stop current task and reset' : 'Wipe session'}
+        >
+          {isRunning ? 'Reset (stop task)' : 'Reset session'}
+        </button>
         <button className="danger" onClick={handleDelete} disabled={isRunning}>Delete</button>
       </div>
+      <TimelineModal open={timelineOpen} onClose={() => setTimelineOpen(false)} agentName={name} />
     </div>
   );
 }

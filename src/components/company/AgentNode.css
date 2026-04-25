@@ -53,11 +53,3 @@
   color: var(--fg-dim);
   font-family: var(--font-mono);
 }
-
-/* React Flow handle overrides */
-.agent-node .react-flow__handle {
-  background: var(--border);
-  border: 1px solid var(--bg-1);
-  width: 8px;
-  height: 8px;
-}
